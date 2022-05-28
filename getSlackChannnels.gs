@@ -1,77 +1,44 @@
 
-//インストーラブルトリガで定期実行とする
+//インストーラブルトリガで定期実行とする としても良い
 /**
- * xxxx
+ * スプレッドシートに二次元配列として受け取ったデータをセットする。
  * @param {xxxx} xxx - xxxx
  * @param {xxxx} xxx - xxxx
  */
 
 function setSlackChannnelsForSheet() {
+
+  const arrayChannelsInfo = objectToArray();
   // 現在日時を取得
   const currentDate = new Date();
 
-  //書き込む前にスプレッドシートの情報をクリアする
-
-  //書き込む情報を取得
-  const channelsArray = objectToArray();
+  //書き込む前にスプレッドシートの情報をクリアする 未実装
 
   // スプレッドシート取得
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('list');
 
-  //スプレッドーシートにSlack Channel情報を書き込む 最終的には現在日時とか差分どうにかする
-  sheet.appendRow(channelsArray);
+  //getRange(行番号, 列番号, 行数, 列数)
+  //スプレッドーシートにSlack Channel情報を書き込む 
+  //最終的には現在日時とか差分どうにかする
+  sheet.getRange(2, 1, arrayChannelsInfo.length, arrayChannelsInfo[0].length).setValues(arrayChannelsInfo);
 }
 
 /**
- * SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列にする
- * return {array} conversationsListResponse - SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列に格納
+ * SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列にする、スプレッドシートに書き込むために
+ * return {array} arrayChannelsInfo - SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列に格納
  * 
  * 参考
  * https://moripro.net/gas-object-to-array/
  */
 function objectToArray() {
   const objectOfSlackConversationsListResponse = getResponseAsObject();
-  // console.log(objectOfSlackConversationsListResponse);
-
   const arrayHasChannelObjects = objectOfSlackConversationsListResponse.channels;//OK;true取り除く
-  // console.log(arrayHasChannelObjects);
-
-  // const arrayChannelObjects = Object.entries(arrayChannelObjects);
-
-  // console.log(Object.keys(arrayHasChannelObjects));
-  // console.log(Object.values(arrayHasChannelObjects));
-  // // console.log(Object.entries(arrayHasChannelObjects));
-  // return;
-
-  // const test = arrayHasChannelObjects[0];
-  // console.log(test);
-
-  // const test2 = Object.entries(test);
-  // console.log(test2);
-
-  const arrayChannelsName = arrayHasChannelObjects.map(channel => channel.name);
-  console.log(arrayChannelsName);
-
-  const arrayChannelsId = arrayHasChannelObjects.map(channel => channel.id);
-  console.log(arrayChannelsId);
-
-  let array = []
-  array.push[arrayChannelsName, arrayChannelsId]
-  console.log(array);
-
-  let obj = {}
-
-
-    // スプレッドシート取得
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('list');
-
-  //スプレッドーシートにSlack Channel情報を書き込む 最終的には現在日時とか差分どうにかする
-  sheet.appendRow(arrayChannelsName);
-  sheet.appendRow(arrayChannelsId);
-
-  return;
+  const arrayChannelsInfo = arrayHasChannelObjects.map(channel => [channel.name, channel.id]);
+  // console.log(arrayChannelsInfo);
+  // console.log(arrayChannelsInfo.length);
+  // console.log(arrayChannelsInfo[0].length);
+  return　arrayChannelsInfo;
 }
 
 /**
@@ -92,11 +59,11 @@ function getResponseAsObject() {
  * SlackApiからconversations.listを叩く関数
  * return {object} conversationsListResponse - conversations.listを叩いたレスポンス
  * 
- * NOTE:プロジェクトの設定＞スクリプト プロパティ　で設定しておく。
+ * NOTE:プロジェクトの設定＞スクリプト プロパティ　でslackBotUserOAuthToken　設定しておく。
  * 
  * 参考
  * https://qiita.com/seratch/items/2158cb0abed5b8e12809
- * https://www.slack.com/api/conversations.list
+ * https://api.slack.com/methods/conversations.list
  */
 function getSlackConversationsList() {
   const token = PropertiesService.getScriptProperties().getProperty('slackBotUserOAuthToken');
