@@ -1,49 +1,57 @@
 
 //インストーラブルトリガで定期実行とする としても良い
+// 参考
+// https://note.com/digiholic_life/n/nd44d9d0e113a
+// https://so.sha-box.com/2022/05/gas/
+
 /**
  * スプレッドシートに二次元配列として受け取ったデータをセットする。
- * @param {xxxx} xxx - xxxx
- * @param {xxxx} xxx - xxxx
  */
 
 function setSlackChannnelsForSheet() {
 
   const arrayChannelsInfo = objectToArray();
-  // 現在日時を取得
-  const currentDate = new Date();
+  // console.log(arrayChannelsInfo);
 
-  //書き込む前にスプレッドシートの情報をクリアする 未実装
+  // 配列に現在日時を加える
+  const formattedDate = Utilities.formatDate(new Date(), "JST", "yyyy/MM/dd HH:mm:ss");
+  const addArray = arrayChannelsInfo.map(value => {
+    const addFormattedDate = value.push(formattedDate)
+    return addFormattedDate
+  }
+  );
+  // console.log(arrayChannelsInfo);
 
-  // スプレッドシート取得
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('list');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();  // スプレッドシート取得
+  const sheet = ss.getSheetByName('list');  // シートを指定
+  const range = sheet.getRange(2, 1, arrayChannelsInfo.length, arrayChannelsInfo[0].length);// Rangeを指定
 
-  //getRange(行番号, 列番号, 行数, 列数)
-  //スプレッドーシートにSlack Channel情報を書き込む 
-  //最終的には現在日時とか差分どうにかする
-  sheet.getRange(2, 1, arrayChannelsInfo.length, arrayChannelsInfo[0].length).setValues(arrayChannelsInfo);
+  range.clear();  //書き込む前にスプレッドシートの情報をクリアする
+  range.setValues(arrayChannelsInfo);  //スプレッドーシートにSlack Channel情報を書き込む 
 }
 
 /**
  * SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列にする、スプレッドシートに書き込むために
- * return {array} arrayChannelsInfo - SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列に格納
+ * @return {array} arrayChannelsInfo - SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにしたものを配列に格納
  * 
  * 参考
  * https://moripro.net/gas-object-to-array/
  */
 function objectToArray() {
   const objectOfSlackConversationsListResponse = getResponseAsObject();
+  // console.log(objectOfSlackConversationsListResponse);
+  // return;
   const arrayHasChannelObjects = objectOfSlackConversationsListResponse.channels;//OK;true取り除く
-  const arrayChannelsInfo = arrayHasChannelObjects.map(channel => [channel.name, channel.id]);
+  const arrayChannelsInfo = arrayHasChannelObjects.map(channel => [channel.name, channel.id, channel.is_channel, channel.is_archived]);
   // console.log(arrayChannelsInfo);
   // console.log(arrayChannelsInfo.length);
   // console.log(arrayChannelsInfo[0].length);
-  return　arrayChannelsInfo;
+  return arrayChannelsInfo;
 }
 
 /**
  * SlackApiからconversations.listで得たレスポンスをJSONからオブジェクトにする関数
- * return {object} objectOfSlackConversationsListResponse - conversations.listのレスポンスをオブジェクトにしたもの
+ * @return {object} objectOfSlackConversationsListResponse - conversations.listのレスポンスをオブジェクトにしたもの
  * 
  * 参考
  * https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse
@@ -57,7 +65,7 @@ function getResponseAsObject() {
 
 /**
  * SlackApiからconversations.listを叩く関数
- * return {object} conversationsListResponse - conversations.listを叩いたレスポンス
+ * @return {object} conversationsListResponse - conversations.listを叩いたレスポンス
  * 
  * NOTE:プロジェクトの設定＞スクリプト プロパティ　でslackBotUserOAuthToken　設定しておく。
  * 
