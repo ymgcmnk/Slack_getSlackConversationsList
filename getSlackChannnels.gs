@@ -11,7 +11,7 @@
 function setSlackChannnelsForSheet() {
 
   const arrayChannelsInfo = objectToArray();
-  // console.log(arrayChannelsInfo);
+  console.log(arrayChannelsInfo);
 
   // 配列に現在日時を加える
   const formattedDate = Utilities.formatDate(new Date(), "JST", "yyyy/MM/dd HH:mm:ss");
@@ -20,13 +20,15 @@ function setSlackChannnelsForSheet() {
     return addFormattedDate
   }
   );
-  // console.log(arrayChannelsInfo);
+  console.log(addArray);
+  console.log(arrayChannelsInfo);
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();  // スプレッドシート取得
   const sheet = ss.getSheetByName('list');  // シートを指定
   const range = sheet.getRange(2, 1, arrayChannelsInfo.length, arrayChannelsInfo[0].length);// Rangeを指定
 
   range.clear();  //書き込む前にスプレッドシートの情報をクリアする
+  SpreadsheetApp.flush();//クリアした状態をスプレッドシートに即時適用する
   range.setValues(arrayChannelsInfo);  //スプレッドーシートにSlack Channel情報を書き込む 
 }
 
@@ -75,15 +77,26 @@ function getResponseAsObject() {
  */
 function getSlackConversationsList() {
   const token = PropertiesService.getScriptProperties().getProperty('slackBotUserOAuthToken');
-  const slackConversationsListResponse = UrlFetchApp.fetch(
-    `https://www.slack.com/api/conversations.list`,
+  const url = `https://www.slack.com/api/conversations.list`;
+ 
+  const options = 
     {
-      method: "post",
-      contentType: "application/x-www-form-urlencoded",
-      headers: { "Authorization": `Bearer ${token}` },
-      // payload: payload,
+    method: "post",
+    contentType: "application/x-www-form-urlencoded",
+    headers: { "Authorization": `Bearer ${token}` },
+    "payload" : {
+      "token": token,
+      "limit": 1000,
+      "exclude_archived": false,
+      "types": "public_channel,private_channel",
+      // "cursor": cursor
     }
-  );
-  // console.log(`response: ${slackConversationsListResponse}`);
+  }
+  
+  // console.log(url);
+  // console.log(options);
+
+  const slackConversationsListResponse = UrlFetchApp.fetch(url, options);
+  // return console.log(`response: ${slackConversationsListResponse}`);
   return slackConversationsListResponse;
 }
